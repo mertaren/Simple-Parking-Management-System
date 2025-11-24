@@ -1,28 +1,44 @@
 import cv2 as cv
 import pickle
+import numpy as np
 
 img_path = './Data/test_video_screenshot.png'
-
+file_path = 'coordinates.pickle'
 # Parking lot list
 try:
-    with open('coordinats.pickle','rb') as f:
+    with open(file_path, 'rb') as f:
         pos_list = pickle.load(f)
 except:
     pos_list = []
 
+# Temp list to keep track of clicks
+current_points = []
+
 # Click and draw function
 def click_it(events, x, y, flags, params):
+    global current_points, pos_list
     
-    # Left click adds a rectangle box
+    # Left click adds a point
     if events == cv.EVENT_LBUTTONDOWN:
-            pos_list.append((x, y))
+            current_points.append((x, y))
+
+            if len(current_points) == 4: # 4 pount check
+                 pos_list.append(current_points)
+                 current_points = [] # Reset the list      
+
+                 # Save
+                 with open(file_path, 'wb') as f:
+                      pickle.dump(pos_list, f)  
+    
     # Mouse button delete last added rectangle box
     if events == cv.EVENT_MBUTTONDOWN:
-            pos_list.pop()
-    print(pos_list)
-    # Update folder every steps
-    with open('coordinats.pickle', 'wb') as f:
-        pickle.dump(pos_list, f)
+            if len(pos_list) > 0 : 
+                pos_list.pop()
+                
+                # Save again
+                with open(file_path, 'wb') as f:
+                     pickle.dump(pos_list, f)
+            current_points = [] # Reset the list for half lines
 
 
 while True:
@@ -30,9 +46,12 @@ while True:
 
     # drawing points
     for pos in pos_list:
-        cv.rectangle(img, pos, (pos[0]+50, 
-                                pos[1]+100), 
-                                (255,0,255), 2)    
+        # For Polylines : numpy array
+        pts = np.array(pos, np.int32)
+        pts = pts.reshape((-1, 1, 2))
+
+        cv.polylines(img, [pts], True, (0, 255, 0), 2)
+
     cv.imshow('Selected Area', img)
     cv.setMouseCallback('Selected Area', click_it)
 
