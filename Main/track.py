@@ -44,13 +44,23 @@ def click_it(events, x, y, flags, params):
 while True:
     img = cv.imread(img_path)
 
-    # drawing points
+    # Drawing points
     for pos in pos_list:
         # For Polylines : numpy array
         pts = np.array(pos, np.int32)
         pts = pts.reshape((-1, 1, 2))
 
         cv.polylines(img, [pts], True, (0, 255, 0), 2)
+    # Shows while drawing points
+    if len(current_points) > 0:
+         pts_temp = np.array(current_points, np.int32)
+         pts_temp = pts_temp.reshape((-1, 1, 2))
+
+         cv.polylines(img, [pts_temp], False, (0, 0 , 255), 2) # isClosed=False
+
+         # Display edge points       
+         for pt in current_points:
+            cv.circle(img, pt, 3, (0,0,255), -1)
 
     cv.imshow('Selected Area', img)
     cv.setMouseCallback('Selected Area', click_it)
