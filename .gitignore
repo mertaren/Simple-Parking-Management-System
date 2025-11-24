@@ -1,0 +1,18 @@
+# Python files
+_pycache__/
+*.py[cod]
+*$py.class
+
+# venv , env files
+venv/
+env/
+.env
+
+# Data files
+*.mp4
+*.avi
+*.mov
+
+# IDE settings
+.vscode/
+.idea/
