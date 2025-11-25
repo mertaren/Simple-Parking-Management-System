@@ -1,17 +1,18 @@
-import pickle
 import os
+from adjust_gamma import adjust_gamma
+import pickle
 import cv2 as cv
 import numpy as np
 from ultralytics import YOLO
 
 DEBUG_MODE = False
-CONFIDENCE_THRESHOLD = 0.45
+CONFIDENCE_THRESHOLD = 0.15
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 video_path = os.path.join(script_dir, "..", "Data", "test_vid_short.mp4")
 
 cap = cv.VideoCapture(video_path)
-model = YOLO('yolov8n.pt') # Nano version for coco dataset
+model = YOLO('yolov8m.pt') # Switch to medium model
 
 # Load park coordinates
 try:
@@ -32,8 +33,9 @@ while True:
     ret, frame = cap.read()
     if not ret:
         break
-
-    results = model(frame, stream=True, verbose=False)
+    
+    gamma = adjust_gamma(frame, gamma=1.3)   
+    results = model(gamma, stream=True, verbose=False)
 
     temp_list = [] # to hold the center points of the vehicles
 
@@ -86,7 +88,7 @@ while True:
 
     cv.imshow("Smart Parking System", frame)
 
-    key = cv.waitKey(30) & 0xFF
+    key = cv.waitKey(20) & 0xFF
     if key == ord('q'):
         break
     elif key == ord('d'):
