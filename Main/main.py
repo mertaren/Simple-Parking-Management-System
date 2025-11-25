@@ -1,12 +1,13 @@
 import os
-from adjust_gamma import adjust_gamma
 import pickle
 import cv2 as cv
 import numpy as np
 from ultralytics import YOLO
 
+from utils import adjust_gamma, apply_clahe
+
 DEBUG_MODE = False
-CONFIDENCE_THRESHOLD = 0.15
+CONFIDENCE_THRESHOLD = 0.10
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 video_path = os.path.join(script_dir, "..", "Data", "test_vid_short.mp4")
@@ -34,8 +35,9 @@ while True:
     if not ret:
         break
     
-    gamma = adjust_gamma(frame, gamma=1.3)   
-    results = model(gamma, stream=True, verbose=False)
+    gamma = adjust_gamma(frame, gamma=2.6)
+    new_frame = apply_clahe(gamma, clip_limit=2.0)   
+    results = model(new_frame, stream=True, verbose=False, imgsz=1280)
 
     temp_list = [] # to hold the center points of the vehicles
 
@@ -50,7 +52,7 @@ while True:
             cls = int(box.cls[0])
             if cls in [2, 3, 5, 7]: # COCO IDs
 
-                # Get cords -- Float to int
+               # Get cords -- Float to int
                 x1, y1, x2, y2 = map(int, box.xyxy[0])
 
                 # Calculate center point
@@ -87,8 +89,9 @@ while True:
         cv.polylines(frame, [pts], True, color, thickness)
 
     cv.imshow("Smart Parking System", frame)
+    #cv.imshow("Processed", new_frame)
 
-    key = cv.waitKey(20) & 0xFF
+    key = cv.waitKey(30) & 0xFF
     if key == ord('q'):
         break
     elif key == ord('d'):
