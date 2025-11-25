@@ -5,25 +5,21 @@ import numpy as np
 from ultralytics import YOLO
 
 DEBUG_MODE = False
+CONFIDENCE_THRESHOLD = 0.45
+
 script_dir = os.path.dirname(os.path.abspath(__file__))
 video_path = os.path.join(script_dir, "..", "Data", "test_vid_short.mp4")
+
 cap = cv.VideoCapture(video_path)
 model = YOLO('yolov8n.pt') # Nano version for coco dataset
 
 # Load park coordinates
-with open('coordinates.pickle', 'rb') as f:
-    pos_list = pickle.load(f)
-
-def check_park(img, prop_img):
-
-    for pos in pos_list:
-        # Numpy array transform
-        pts = np.array(pos, np.int32)
-        pts = pts.reshape((-1, 1, 2))
-
-        cv.polylines(img, [pts], True, color=(0, 255 ,0), thickness=2)
-
-    return img
+try:
+    with open('coordinates.pickle', 'rb') as f:
+        pos_list = pickle.load(f)
+except:
+    print("Pickle file not found")
+    pos_list = []
 
 cv.namedWindow('Smart Parking System', cv.WINDOW_NORMAL)
 cv.resizeWindow('Smart Parking System', 1200, 720)
@@ -44,12 +40,16 @@ while True:
     for r in results:
         boxes = r.boxes
         for box in boxes:
+            # Confidence control
+            conf = box.conf[0] # Tensor format data
+            if conf < CONFIDENCE_THRESHOLD:
+                continue
 
             cls = int(box.cls[0])
             if cls in [2, 3, 5, 7]: # COCO IDs
 
-                # Get cords
-                x1, y1, x2, y2 = box.xyxy[0]
+                # Get cords -- Float to int
+                x1, y1, x2, y2 = map(int, box.xyxy[0])
 
                 # Calculate center point
                 cx = int((x1 + x2) / 2)
@@ -59,19 +59,34 @@ while True:
                     cv.rectangle(frame, (x1, y1), (x2, y2), (255, 0 ,255), 1)
                     cv.circle(frame, (cx, cy), 5, (0, 255 ,255), -1)
     
+    empty_spaces = 0
+
     for pos in pos_list:
-        pts = np.array(pos, np.int32)
-        pts = pts.reshape((-1, 1, 2))
+        pts = np.array(pos, np.int32).reshape((-1, 1, 2))
+
+        is_occupied = False # Assumption that the area is empty
 
         for center in temp_list:
 
             result = cv.pointPolygonTest(pts, center, False)
 
-        cv.polylines(frame, [pts], True, (0, 0, 255), 2 )
-    
+            if result >= 0: # If any car is in the space
+                is_occupied = True
+                break
+
+        if is_occupied:
+            color = (0, 0, 255) # Red: If the space is occupied
+            thickness = 2
+        else:
+            color = (0, 255, 0) # Green : If the space is empyt
+            thickness = 2
+            empty_spaces += 1
+        
+        cv.polylines(frame, [pts], True, color, thickness)
+
     cv.imshow("Smart Parking System", frame)
 
-    key = cv.waitKey(40) & 0xFF
+    key = cv.waitKey(30) & 0xFF
     if key == ord('q'):
         break
     elif key == ord('d'):
