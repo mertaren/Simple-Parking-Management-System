@@ -1,10 +1,13 @@
 import pickle
+import os
 import cv2 as cv
 import numpy as np
 from ultralytics import YOLO
 
 DEBUG_MODE = False
-cap = cv.VideoCapture('./Data/test_video.mp4')
+script_dir = os.path.dirname(os.path.abspath(__file__))
+video_path = os.path.join(script_dir, "..", "Data", "test_vid_short.mp4")
+cap = cv.VideoCapture(video_path)
 model = YOLO('yolov8n.pt') # Nano version for coco dataset
 
 # Load park coordinates
@@ -22,16 +25,19 @@ def check_park(img, prop_img):
 
     return img
 
+cv.namedWindow('Smart Parking System', cv.WINDOW_NORMAL)
+cv.resizeWindow('Smart Parking System', 1200, 720)
+
 while True:
     # Video loop
     if cap.get(cv.CAP_PROP_POS_FRAMES) == cap.get(cv.CAP_PROP_FRAME_COUNT):
-        cap.set(cv.CAP_PROP_POS_FRAMES)
+        cap.set(cv.CAP_PROP_POS_FRAMES, 0)
     
     ret, frame = cap.read()
     if not ret:
         break
 
-    results = model(frame, stream=True)
+    results = model(frame, stream=True, verbose=False)
 
     temp_list = [] # to hold the center points of the vehicles
 
@@ -65,7 +71,7 @@ while True:
     
     cv.imshow("Smart Parking System", frame)
 
-    key = cv.waitKey(60) & 0xFF
+    key = cv.waitKey(40) & 0xFF
     if key == ord('q'):
         break
     elif key == ord('d'):

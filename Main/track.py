@@ -1,9 +1,13 @@
+import os    
+os.environ["QT_QPA_PLATFORM"] = "xcb"  # if you are using Ubuntu 22.04
 import cv2 as cv
 import pickle
 import numpy as np
 
-img_path = './Data/test_video_screenshot.png'
+script_dir = os.path.dirname(os.path.abspath(__file__))
+video_path = os.path.join(script_dir, "..", "Data", "test_vid_short.mp4")
 file_path = 'coordinates.pickle'
+print(video_path)
 # Parking lot list
 try:
     with open(file_path, 'rb') as f:
@@ -22,7 +26,7 @@ def click_it(events, x, y, flags, params):
     if events == cv.EVENT_LBUTTONDOWN:
             current_points.append((x, y))
 
-            if len(current_points) == 4: # 4 pount check
+            if len(current_points) == 4: # 4 point check
                  pos_list.append(current_points)
                  current_points = [] # Reset the list      
 
@@ -40,9 +44,19 @@ def click_it(events, x, y, flags, params):
                      pickle.dump(pos_list, f)
             current_points = [] # Reset the list for half lines
 
+cap = cv.VideoCapture(video_path)
+success, base_img = cap.read() # Read only one frame
+cap.release()
+
+if not success:
+     print("Error: Check the video path")
+
+cv.namedWindow('Selected Area', cv.WINDOW_NORMAL)
+cv.resizeWindow('Selected Area', 1200, 720)
+cv.setMouseCallback('Selected Area', click_it)
 
 while True:
-    img = cv.imread(img_path)
+    img = base_img.copy()
 
     # Drawing points
     for pos in pos_list:
@@ -63,7 +77,7 @@ while True:
             cv.circle(img, pt, 3, (0,0,255), -1)
 
     cv.imshow('Selected Area', img)
-    cv.setMouseCallback('Selected Area', click_it)
-
-    if cv.waitKey(1) & 0xFF == ord('q'):
+    if cv.waitKey(10) & 0xFF == ord('q'):
         break
+    
+cv.destroyAllWindows()
