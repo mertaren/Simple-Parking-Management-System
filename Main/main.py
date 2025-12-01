@@ -7,13 +7,16 @@ from ultralytics import YOLO
 from utils import adjust_gamma, apply_clahe
 
 DEBUG_MODE = False
-CONFIDENCE_THRESHOLD = 0.10
+CONFIDENCE_THRESHOLD = 0.35
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
-video_path = os.path.join(script_dir, "..", "Data", "test_vid_short.mp4")
+video_path = os.path.join(script_dir, "..", "Data", "test_video.mp4")
 
 cap = cv.VideoCapture(video_path)
-model = YOLO('yolov8m.pt') # Switch to medium model
+fps = cap.get(cv.CAP_PROP_FPS)
+delay = int(1000 / fps)
+
+model = YOLO('yolov8n.pt') # NANO model
 
 # Load park coordinates
 try:
@@ -35,9 +38,10 @@ while True:
     if not ret:
         break
     
-    gamma = adjust_gamma(frame, gamma=2.6)
-    new_frame = apply_clahe(gamma, clip_limit=2.0)   
-    results = model(new_frame, stream=True, verbose=False, imgsz=1280)
+    
+    #gamma = adjust_gamma(frame, gamma=2.6)
+    #new_frame = apply_clahe(frame, clip_limit=2.0)   
+    results = model(frame, stream=True, verbose=False, imgsz=640)
 
     temp_list = [] # to hold the center points of the vehicles
 
@@ -89,9 +93,9 @@ while True:
         cv.polylines(frame, [pts], True, color, thickness)
 
     cv.imshow("Smart Parking System", frame)
-    #cv.imshow("Processed", new_frame)
 
-    key = cv.waitKey(30) & 0xFF
+
+    key = cv.waitKey(delay) & 0xFF
     if key == ord('q'):
         break
     elif key == ord('d'):

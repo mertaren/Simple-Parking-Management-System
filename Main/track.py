@@ -1,14 +1,17 @@
 import os    
-os.environ["QT_QPA_PLATFORM"] = "xcb"  # if you are using Ubuntu 22.04
+os.environ["QT_QPA_PLATFORM"] = "xcb"  # for linux users....
 import cv2 as cv
 import pickle
 import numpy as np
 
+data = 'test_video.mp4'
+
 script_dir = os.path.dirname(os.path.abspath(__file__))
-video_path = os.path.join(script_dir, "..", "Data", "test_vid_short.mp4")
+video_path = os.path.join(script_dir, "..", "Data", data)
 file_path = 'coordinates.pickle'
-print(video_path)
-# Parking lot list
+
+
+# Parking lot coordinates
 try:
     with open(file_path, 'rb') as f:
         pos_list = pickle.load(f)
