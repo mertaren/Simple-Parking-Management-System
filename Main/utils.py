@@ -19,3 +19,6 @@ def apply_clahe(image, clip_limit=2, tile_gridSize=(8,8)):
 
     limg = cv.merge((clh, a, b))
     return cv.cvtColor(limg, cv.COLOR_LAB2BGR)
+
+def increase_contrast(img, alpha=1.5, beta=0):
+    return cv.convertScaleAbs(img, alpha=alpha, beta=beta)
