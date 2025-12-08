@@ -13,10 +13,7 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 video_path = os.path.join(script_dir, "..", "Data", "test_video.mp4")
 
 cap = cv.VideoCapture(video_path)
-fps = cap.get(cv.CAP_PROP_FPS)
-delay = int(1000 / fps)
-
-model = YOLO('yolov8n.pt') # NANO model
+model = YOLO('yolov8n-visdrone.pt') # VisDrone model
 
 # Load park coordinates
 try:
@@ -54,7 +51,8 @@ while True:
                 continue
 
             cls = int(box.cls[0])
-            if cls in [2, 3, 5, 7]: # COCO IDs
+            # 3: car, 4: van, 5: truck, 6: tricycle, 9: bus 
+            if cls in [3, 4, 5, 6, 9]: # VisDrone IDs
 
                # Get cords -- Float to int
                 x1, y1, x2, y2 = map(int, box.xyxy[0])
@@ -95,7 +93,7 @@ while True:
     cv.imshow("Smart Parking System", frame)
 
 
-    key = cv.waitKey(delay) & 0xFF
+    key = cv.waitKey(20) & 0xFF
     if key == ord('q'):
         break
     elif key == ord('d'):
