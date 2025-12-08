@@ -9,7 +9,6 @@ env/
 .env
 
 # Data files
-Data/
 *.mp4
 *.avi
 *.mov
