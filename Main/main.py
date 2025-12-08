@@ -4,16 +4,21 @@ import cv2 as cv
 import numpy as np
 from ultralytics import YOLO
 
-from utils import adjust_gamma, apply_clahe
+from utils import adjust_gamma, apply_clahe, increase_contrast
 
 DEBUG_MODE = False
-CONFIDENCE_THRESHOLD = 0.35
+CONFIDENCE_THRESHOLD = 0.10
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 video_path = os.path.join(script_dir, "..", "Data", "test_video.mp4")
 
 cap = cv.VideoCapture(video_path)
+<<<<<<< HEAD
 model = YOLO('yolov8n-visdrone.pt') # VisDrone model
+=======
+
+model = YOLO('yolov8n.pt') # NANO model
+>>>>>>> f0fd1954c0718d18dae0227fc4fb83a206577c0f
 
 # Load park coordinates
 try:
@@ -38,7 +43,8 @@ while True:
     
     #gamma = adjust_gamma(frame, gamma=2.6)
     #new_frame = apply_clahe(frame, clip_limit=2.0)   
-    results = model(frame, stream=True, verbose=False, imgsz=640)
+    contrast_frame = increase_contrast(frame, alpha=1.6, beta=-40)
+    results = model(contrast_frame, stream=True, verbose=False, imgsz=1248)
 
     temp_list = [] # to hold the center points of the vehicles
 
@@ -91,6 +97,7 @@ while True:
         cv.polylines(frame, [pts], True, color, thickness)
 
     cv.imshow("Smart Parking System", frame)
+    
 
 
     key = cv.waitKey(20) & 0xFF
